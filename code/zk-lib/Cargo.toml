@@ -1,0 +1,27 @@
+[package]
+name = "zk-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plonky2 = "0.1.4"
+rand = "0.8.5"
+anyhow = { version = "1.0.80", default-features = false }
+
+[dev-dependencies]
+criterion = { version = "0.4.0", features = ["html_reports"] }
+
+[[bench]]
+name = "hash_benchmark"
+harness = false
+
+[[bench]]
+name = "zk_benchmark"
+harness = false
+
+[profile.release]
+opt-level = 3
+strip = true
+debug-assertions = false
+overflow-checks = false
+lto = true
