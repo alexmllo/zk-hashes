@@ -1,0 +1,79 @@
+\chapter{Introduction}
+\section{Motivation}
+The interest in zero-knowledge proofs has experienced a notable growth, especially with the increasing interest in blockchain technology and verifiable computation. Although this technology was first described by Goldwasser et al. in 1985, blockchain technology has helped zero-knowledge proofs increase his popularity. Today, this technology is widely used across various industries, from Web3 platforms to supply chains and the Internet of Things (IoT).
+
+In the world of blockchain technology, zero-knowledge proofs play a crucial role in enhancing privacy and security. They enable participants to prove the validity of transactions or computations without revealing sensitive or private information, therefore addressing concerns regarding data privacy and confidentiality.
+
+Moreover, in IoT networks, they can prove and verify the authenticity of exchanged data. Similarly, in supply chains, zero-knowledge proofs are used to validate product authenticity while mantaining privacity.
+
+Cryptographic hash functions play a fundamental role in ensuring the integrity and security of digital data. These functions are widely employed in various cryptographic protocols, digital signatures, messages and passwords verification, for example.
+Hash functions such as SHA-2 or SHA-3, while widely used and secure, may not meet the efficient requirements of zero-knowledge proofs. This has led to the development of zero-knowledge friendly hash functions such as Poseidon, Arion and Griffin to name a few, which offer compact arithmetic circuits, enabling faster proof generation and verification within zero-knowledge proof systems. 
+
+\section{Statement of purpose}
+This thesis aims to investigate some of the most used and novel hash functions efficient in zero-knowledge and implement them within a zero-knowledge framework. Specifically, the obejctives of this research include the plain implementation of these hash functions in the Goldilocks field and the BLS12-381 scalar field. Subsequently, these hash functions will also be implemented in two zero-knowledge frameworks, Plonk and Plonky2.\\
+Furthermore, benchmarks have been done to asses the performance of these hash functions in plain performance and within these frameworks.
+
+\section{Outline}
+This thesis is organized as follows. We begin by presenting the necessary background knowledge and defining all the concepts used throughout this thesis in Chapter~\ref{sec:theory}. Then, in Chapter~\ref{sec:proof-theory}, we explain proofs systems, define zero-knowledge proofs, SNARKs, and specifically, the proof system that we will use, Plonk. In Chapter~\ref{sec:zk-hashes}, we define the hash functions that will be implemented in this thesis and provide all the necessary theoretical knowledge to understand them. Next, in Chapter~\ref{sec:impl}, we explain how we developed these hash functions, including some of the parameters used for their implementation. In Chapter~\ref{sec:evaluation}, we present and discuss the results obtained from the benchmarks. Next, conclusions are developed togheter with some insights for future work in Chapter~\ref{sec:conclusions}. Finally, in Chapter~\ref{sec:sustainability}, we detail a sustainability analysis and ethical implications of ower project.
+
+\section{Work plan}
+The work on this thesis has been organized according to the schedule in Figure~\ref{fig:gant}.
+
+    \begin{figure}[htbp]
+        \begin{center}
+            \makebox[\textwidth]{\begin{ganttchart}[
+                y unit title=0.4cm,
+                y unit chart=0.5cm,
+                vgrid,hgrid,
+                title label anchor/.style={below=-1.6ex},
+                title left shift=.05,
+                title right shift=-.05,
+                title height=1,
+                progress label text={},
+                bar height=0.7,
+                group right shift=0,
+                group top shift=.6,
+                group height=.3
+                ]{1}{23}
+                %labels
+                \gantttitle{Thesis Phases} {23} \\
+                \gantttitle{2024} {23} \\
+                \gantttitle{February}{5} 
+                \gantttitle{March}{5}
+                \gantttitle{April}{5}
+                \gantttitle{May}{5}
+                \gantttitle{June}{3} \\
+                %tasks
+                %First group
+                \ganttgroup{Research}{1}{6} \\
+                \ganttbar{Literature review}{1}{6} \\\\
+
+                %Second group
+                \ganttgroup{Plonky2 Implementation}{3}{13} \\
+                \ganttbar{Hades}{5}{6} \\
+                \ganttbar{Poseidon}{5}{8} \\
+                \ganttbar{Rescue}{8}{9} \\
+                \ganttbar{Griffin}{9}{9} \\
+                \ganttbar{Anemoi}{9}{11} \\
+                \ganttbar{Arion}{11}{13} \\\\
+
+                \ganttgroup{Plonk Implementation}{13}{16} \\
+                \ganttbar{Hash functions}{13}{16} \\\\
+
+                %Third group
+                \ganttgroup{Performance}{11}{14} \\
+                \ganttbar{Optimizations}{11}{14} \\\\
+
+                %Fourth group
+                \ganttgroup{Benchmarking}{13}{17} \\
+                \ganttbar{Tests}{13}{17} \\\\
+
+                %Fourth group
+                \ganttgroup{Documentation}{19}{22} \\
+                \ganttbar{Thesis}{19}{22} \\
+            
+            \end{ganttchart}}
+        \end{center}
+        \caption{Gantt Chart}
+        \label{fig:gant}
+    \end{figure}

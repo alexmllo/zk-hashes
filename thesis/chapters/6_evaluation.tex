@@ -1,0 +1,183 @@
+\chapter{Evaluation}
+\label{sec:evaluation}
+\section*{Overview}
+In this section, we provide a comparative analysis of the implemented hash functions from section~\ref{sec:zk-hashes}, including Poseidon, Rescue-prime, Griffin, Anemoi and Arion on the Plonky2 and Plonk proving sytems.
+
+Our objective with these measurement is to provide a realistic perspective and reason about the user decision when using these hash functions.
+
+\section{Specifications}
+Measurements were conducted on a system configured with a 1.4 GHz Quad-Core Intel Core i5 processor, 8 GB LPDDR3 RAM with a transfer rate of 2133 MHz, and running macOS 14.5. The system was clocked at 1.4 GHz and utilized Rust's Nightly build dated 2024-02-01. Benchmarking was performed using Criterion 0.5, with Plonky2 version 0.1.4 and dusk-plonk version 0.19.
+
+\section{Plonky2 Performance}
+
+In Table~\ref{tab:goldi-plain-performance}, the plain performance on the Goldilocks field is compared using the number of rounds specified in Table~\ref{tab:goldi-rounds}.
+
+From this metrics, we can observe that Arion and Griffin shows the best performance with the shortest execution time compared to Rescue and and Anemoi. However, as we show later in Table~\ref{tab:plonky2-performance}, Arion has a worst performance when used in SNARKs over the Goldilocks field. Rescue and Anemoi have the worst plain performance due to having many $x^{1/\alpha}$ evaluations per round. Griffin and Arion also uses $x^{1/\alpha}$, but only once per round. Poseidon, despite having a high number of rounds, doesn't compute inverse S-box so its performance is as good as Arion and Griffin.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}cclllc@{}}
+  \toprule
+  \multicolumn{6}{c}{Time (µs)}                                \\ \midrule
+  \multicolumn{1}{l|}{}               & \multicolumn{5}{c}{Hash}       \\ \cmidrule(l){2-6} 
+  \multicolumn{1}{l|}{}   & \multicolumn{1}{l}{Poseidon} & Rescue-prime                  & Griffin                       & Anemoi                        & Arion     \\ \midrule
+  \multicolumn{1}{c|}{State size $t$} & \multicolumn{5}{c}{$\alpha=7$} \\ \midrule
+  \multicolumn{1}{c|}{12} & 8.1879                    & \multicolumn{1}{c}{23.293} & \multicolumn{1}{c}{4.6652} & \multicolumn{1}{c}{32.266} & 3.6192 \\ \bottomrule
+  \end{tabular}
+  \caption{Plain performance comparasion on the Goldilocks field.}
+  \label{tab:goldi-plain-performance}
+  \end{table}
+
+Table~\ref{tab:plonky2-performance} presents metrics for circuit setup and proof generation of all hash functions in the Plonky2 framework within the Goldilocks field.\\
+Circuit setup and proof generation times reflect the complexity and computational demands of integrating the hash functions into the zero-knowledge framework.
+
+In this table we can see that, Anemoi, Griffin and Arion show the most efficient circuit setup times around 33 ms, meaning that their circuit design are less complex than in the case of Poseidon and Rescue, for the same reasons we explained before.\\
+Anemoi presents better metrics than in plain performance, due to being able to apply the optimization to compute $x^{1/\alpha}$ as it is explained in section~\ref{sec:plonky-implementation}.\\
+Poseidon has the longest proof generation time (114,32 ms), which indicate a higher number of constraint in the circuit design, due to the high round number it has. Arion, we can see that it has a moderately high proof generation time, indicating that it is not optimized to work on the Goldilocks field, in contrast, in Table~\ref{tab:plonk-performance} it presentes good results when working on the BLS12-381 curve.
+
+\begin{table}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}cccccccllll@{}}
+  \toprule
+  \multicolumn{11}{c}{Time (ms)}                                                                                  \\ \midrule
+  \multicolumn{1}{c|}{}               & \multicolumn{5}{c|}{Circuit Setup} & \multicolumn{5}{c}{Proof Generation} \\ \midrule
+  \multicolumn{1}{c|}{Hash} &
+    Poseidon &
+    Rescue-prime &
+    Griffin &
+    Anemoi &
+    \multicolumn{1}{c|}{Arion} &
+    \multicolumn{1}{l}{Poseidon} &
+    Rescue-prime &
+    Griffin &
+    Anemoi &
+    Arion \\ \midrule
+  \multicolumn{1}{l|}{State size $t$} & \multicolumn{10}{c}{$\alpha=7$}                                           \\ \midrule
+  \multicolumn{1}{c|}{12} &
+    79,575 &
+    42.081 &
+    33.891 &
+    33.778 &
+    \multicolumn{1}{c|}{33,806} &
+    114.32 &
+    \multicolumn{1}{c}{74.845} &
+    \multicolumn{1}{c}{75.450} &
+    \multicolumn{1}{c}{74.802} &
+    \multicolumn{1}{c}{89,75} \\ \bottomrule
+  \end{tabular}%
+  }
+  \caption{Plonky2 performance comparasion.}
+  \label{tab:plonky2-performance}
+  \end{table}
+
+
+\section{Plonk Performance}
+
+In Table~\ref{tab:bls-plain-performance}, we evaluate the plain implementation of the hash functions within the BLS12-381 curve using the round numbers from Table~\ref{tab:plonk-rounds}.
+
+As the table shows, Poseidon and Arion are the fastest permutations, reinforcing the results obtained in Table~\ref{tab:goldi-plain-performance}. Similar to previous observations, Rescue and Anemoi have the lowest performance, fundamentally due to the number of $x^{1/\alpha}$ operations required to compute in one round. In contrast, Griffin maintains comparable results for different state size $t$.
+
+As we can see, for smaller state size $t$ the performance is better than for a larger $t$, due to the cost of high computational operations needed to be evaluated per round. If we take a look at Table~\ref{tab:plonk-rounds}, we can observe that we have more rounds for smallest $t$ and less for larger $t$, with this, we may believe that we will have better performance for bigger $t$, but looking at the results we can conclude that the state size is more influential than the number of rounds.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}cccccc@{}}
+  \toprule
+  \multicolumn{6}{c}{Time (µs)}                                \\ \midrule
+  \multicolumn{1}{l|}{}               & \multicolumn{5}{c}{Hash}       \\ \cmidrule(l){2-6} 
+  \multicolumn{1}{l|}{}  & \multicolumn{1}{l}{Poseidon}   & \multicolumn{1}{l}{Rescue-prime} & \multicolumn{1}{l}{Griffin}    & \multicolumn{1}{l}{Anemoi}     & Arion     \\ \midrule
+  \multicolumn{1}{c|}{State size $t$} & \multicolumn{5}{c}{$\alpha=5$} \\ \midrule
+  \multicolumn{1}{c|}{4} & \multicolumn{1}{c|}{47,89}  & \multicolumn{1}{c|}{776,98}   & \multicolumn{1}{c|}{206,96} & \multicolumn{1}{c|}{421,56} & 94,76  \\
+  \multicolumn{1}{c|}{5} & \multicolumn{1}{c|}{73,308} & \multicolumn{1}{c|}{795,47}   & \multicolumn{1}{c|}{-}         & \multicolumn{1}{c|}{-}         & 96,84  \\
+  \multicolumn{1}{c|}{6} & \multicolumn{1}{c|}{99,2}   & \multicolumn{1}{c|}{856,76}   & \multicolumn{1}{c|}{-}         & \multicolumn{1}{c|}{525,08} & 100,25 \\
+  \multicolumn{1}{c|}{8} & \multicolumn{1}{c|}{166,06} & \multicolumn{1}{c|}{1146}    & \multicolumn{1}{c|}{221,51} & \multicolumn{1}{c|}{704,67} & 84,649 \\ \bottomrule
+  \end{tabular}
+  \caption{Plain performance comparison on the BLS12-381 scalar field.}
+  \label{tab:bls-plain-performance}
+  \end{table}
+
+Next, we will provide metrics for the hash functions implemented in the Plonk framework within the BLS12-381 curve.
+
+Table~\ref{tab:plonk-constraints} compare the efficiency of the different hash functions in Plonk by counting the number of constraints required to compute the proof.\\
+The table indicates that as the state size $t$ increases, the number of constraints typically increases as well for all hash functions. This trend suggests that larger state sizes require more computational resources, which align with the expected increase in the complexity of the computation.
+
+Arion is the most efficient in terms of constraints requirements across all tested state sizes. Making it suitable for systems where performance is important.\\
+Poseidon starts at a resonable constraint count for smaller states, esclates faster than the other hashes due to his high number of rounds.\\
+Anemoi and Griffin demonstrate a consistent increase of constraints when increasing the state size.
+
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}lccccclll@{}}
+  \toprule
+  \multicolumn{9}{c}{Plonk Constraints} \\ \midrule
+  \multicolumn{1}{c|}{} &
+    \multicolumn{8}{c}{Hash} \\ \cmidrule(l){2-9} 
+  \multicolumn{1}{l|}{} &
+    \multicolumn{1}{l}{Poseidon} &
+    \multicolumn{1}{l}{Rescue-prime} &
+    \multicolumn{1}{l}{Griffin} &
+    \multicolumn{1}{l}{Anemoi} &
+    \multicolumn{4}{l}{Arion} \\ \midrule
+  \multicolumn{1}{l|}{State size $t$} &
+    \multicolumn{8}{c}{$\alpha=5$} \\ \midrule
+  \multicolumn{1}{l|}{4} &
+    \multicolumn{1}{c|}{788} &
+    \multicolumn{1}{c|}{536} &
+    \multicolumn{1}{c|}{356} &
+    \multicolumn{1}{c|}{328} &
+    \multicolumn{4}{c}{241} \\
+  \multicolumn{1}{l|}{5} &
+    \multicolumn{1}{c|}{995} &
+    \multicolumn{1}{c|}{550} &
+    \multicolumn{1}{c|}{-} &
+    \multicolumn{1}{c|}{-} &
+    \multicolumn{4}{c}{305} \\
+  \multicolumn{1}{l|}{6} &
+    \multicolumn{1}{c|}{1501} &
+    \multicolumn{1}{c|}{682} &
+    \multicolumn{1}{c|}{-} &
+    \multicolumn{1}{c|}{412} &
+    \multicolumn{4}{c}{367} \\
+  \multicolumn{1}{l|}{8} &
+    \multicolumn{1}{c|}{2461} &
+    \multicolumn{1}{c|}{1034} &
+    \multicolumn{1}{c|}{866} &
+    \multicolumn{1}{c|}{634} &
+    \multicolumn{4}{c}{406} \\ \bottomrule
+  \end{tabular}
+  \caption{Plonk constraint comparasion. Round numbers are the same as in Table~\ref{tab:plonk-rounds}}
+  \label{tab:plonk-constraints}
+  \end{table}
+
+
+The Table~\ref{tab:plonk-performance} shows performance metrics for the circuit setup and proof generation times of the hash functions implemented using Plonk in the BLS12-381 curve.
+
+In the circuit setup, the times generally increase with the state size for most hash functions.
+
+Poseidon and Rescue-prime show very similar setup times for smaller state sizes but when $t\geq6$ Poseidon shows an increase and Anemoi also for $t=8$.
+
+Arion stands out as the most efficient and scalable in both circuit setup and proof generation. In contrast to the implementation in Plonky2 over the Goldilocks field, in the Plonk framework over the BLS12-381, it presents the best performance over all the hashes making it more suitable when working over the BLS12-381 curve than in the Goldilocks field.\\
+Poseidon, similar to the previous tables, shows increases in both circuit setup and proof generation times as state size increase.\\
+Griffin, Anemoi and Arion, the three of them perform the inverse S-box only one time per round, as previously explained, but Arion having less number of rounds than the previous hashes makes it more efficient in circuit setup and proof generations.
+
+\begin{table}[htbp]
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}lllllllll@{}}
+  \toprule
+  \multicolumn{9}{c}{Time (ms)}                                                                                                                                                       \\ \midrule
+  \multicolumn{1}{c|}{}             & \multicolumn{4}{c|}{Circuit setup}                                                         & \multicolumn{4}{c}{Proof generation}                       \\ \cmidrule(l){2-9} 
+  \multicolumn{1}{c|}{}             & \multicolumn{8}{c}{State size $t$}                                                                                                                      \\ \midrule
+  \multicolumn{1}{l|}{}             & 4         & 5                     & 6                     & \multicolumn{1}{l|}{8}         & 4          & 5         & 6                     & 8         \\ \midrule
+  \multicolumn{1}{l|}{Hash}         & \multicolumn{8}{c}{$\alpha=5$}                                                                                                                          \\ \midrule
+  \multicolumn{1}{l|}{Poseidon}     & 814,58 & 811,16             & 1514,4              & \multicolumn{1}{l|}{2489,1} & 766,25  & 761,49 & 1465,1             & 2337,9  \\
+  \multicolumn{1}{l|}{Rescue-prime} & 812,88 & 812,62             & 813,4              & \multicolumn{1}{l|}{1507,6}    & 770,11  & 766,81 & 773,95             & 1421,8  \\
+  \multicolumn{1}{l|}{Griffin}      & 434,83 & \multicolumn{1}{c}{-} & \multicolumn{1}{c}{-} & \multicolumn{1}{l|}{809,59} & 437,83  & -         & \multicolumn{1}{c}{-} & 835,42 \\
+  \multicolumn{1}{l|}{Anemoi}       & 435,18 & \multicolumn{1}{c}{-} & 437,03             & \multicolumn{1}{l|}{812,83} & 422, 63 & -         & 414,32             & 784,38 \\
+  \multicolumn{1}{l|}{Arion}        & 303,07 & 436,53             & 436,76             & \multicolumn{1}{l|}{437,69} & 293,58  & 412,53 & 418,73             & 417,21 \\ \bottomrule
+  \end{tabular}%
+  }
+  \caption{Plonk performance comparasion. Round numbers are the same as in Table~\ref{tab:plonk-rounds}}
+  \label{tab:plonk-performance}
+  \end{table}

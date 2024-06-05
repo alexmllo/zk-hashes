@@ -1,0 +1,225 @@
+% Copyright (C) 2014-2023 by Thomas Auzinger <thomas@auzinger.name>
+
+\documentclass[draft,final]{vutinfth} % Remove option 'final' to obtain debug information.
+
+% Load packages to allow in- and output of non-ASCII characters.
+\usepackage{lmodern}        % Use an extension of the original Computer Modern font to minimize the use of bitmapped letters.
+\usepackage[T1]{fontenc}    % Determines font encoding of the output. Font packages have to be included before this line.
+\usepackage[utf8]{inputenc} % Determines encoding of the input. All input files have to use UTF8 encoding.
+
+% Extended LaTeX functionality is enables by including packages with \usepackage{...}.
+\usepackage{amsmath}    % Extended typesetting of mathematical expression.
+\usepackage{amssymb}    % Provides a multitude of mathematical symbols.
+\usepackage{mathtools}  % Further extensions of mathematical typesetting.
+\usepackage{microtype}  % Small-scale typographic enhancements.
+\usepackage[inline]{enumitem} % User control over the layout of lists (itemize, enumerate, description).
+\usepackage{multirow}   % Allows table elements to span several rows.
+\usepackage{booktabs}   % Improves the typesetting of tables.
+\usepackage{subcaption} % Allows the use of subfigures and enables their referencing.
+\usepackage[ruled,linesnumbered,algochapter]{algorithm2e} % Enables the writing of pseudo code.
+\usepackage[usenames,dvipsnames,table]{xcolor} % Allows the definition and use of colors. This package has to be included before tikz.
+\usepackage{nag}       % Issues warnings when best practices in writing LaTeX documents are violated.
+\usepackage{todonotes} % Provides tooltip-like todo notes.
+\usepackage{hyperref}  % Enables hyperlinking in the electronic document version. This package has to be included second to last.
+\usepackage[acronym,toc]{glossaries} % Enables the generation of glossaries and lists of acronyms. This package has to be included last.
+\usepackage{pgfgantt}
+\usepackage{xcolor}
+\usepackage{listings, listings-rust}
+\usepackage{geometry}
+\usepackage{eurosym}
+
+% Custom colors for syntax highlighting
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{codered}{rgb}{0.6,0,0}
+
+% Settings for the listings package
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\ttfamily, % Adjust the font size to fit your needs
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    language=Rust,
+    otherkeywords={self, let, fn, pub, trait, impl, const, mut, constraint}, % Add more keywords as needed
+    deletekeywords={data}, % Remove if any conflicts occur
+    escapeinside={(*@}{@*)}, % To add LaTeX within your code
+    morecomment=[l][\color{codered}]{\#},
+}
+
+\lstset{style=mystyle}
+
+% Define convenience functions to use the author name and the thesis title in the PDF document properties.
+\newcommand{\authorname}{Àlex Mitjans Llorach} % The author name without titles.
+\newcommand{\thesistitle}{Implementation of algebraic cryptographic primitives in the Plonk framework} % The title of the thesis. The English version should be used, if it exists.
+
+% Set PDF document properties
+\hypersetup{
+    pdfpagelayout   = TwoPageRight,           % How the document is shown in PDF viewers (optional).
+    linkbordercolor = {Melon},                % The color of the borders of boxes around hyperlinks (optional).
+    pdfauthor       = {\authorname},          % The author's name in the document properties (optional).
+    pdftitle        = {\thesistitle},         % The document's title in the document properties (optional).
+    pdfsubject      = {Subject},              % The document's subject in the document properties (optional).
+    pdfkeywords     = {a, list, of, keywords} % The document's keywords in the document properties (optional).
+}
+
+\setpnumwidth{2.5em}        % Avoid overfull hboxes in the table of contents (see memoir manual).
+\setsecnumdepth{subsection} % Enumerate subsections.
+
+\nonzeroparskip             % Create space between paragraphs (optional).
+\setlength{\parindent}{0pt} % Remove paragraph indentation (optional).
+
+\makeindex      % Use an optional index.
+\makeglossaries % Use an optional glossary.
+%\glstocfalse   % Remove the glossaries from the table of contents.
+
+% Set persons with 4 arguments:
+%  {title before name}{name}{title after name}{gender}
+%  where both titles are optional (i.e. can be given as empty brackets {}).
+\setauthor{}{\authorname}{}{male}
+\setadvisor{Asst. Prof.}{Elena Andreeva}{}{female}
+
+% For bachelor and master theses:
+\setfirstassistant{}{Stefano Trevisani}{}{male}
+%\setsecondassistant{Pretitle}{Forename Surname}{Posttitle}{male}
+%\setthirdassistant{Pretitle}{Forename Surname}{Posttitle}{male}
+
+% For dissertations:
+%\setfirstreviewer{Pretitle}{Forename Surname}{Posttitle}{male}
+%\setsecondreviewer{Pretitle}{Forename Surname}{Posttitle}{male}
+
+% For dissertations at the PhD School and optionally for dissertations:
+%\setsecondadvisor{Pretitle}{Forename Surname}{Posttitle}{male} % Comment to remove.
+
+% Required data.
+\setdate{15}{06}{2024} % Set date with 3 arguments: {day}{month}{year}.
+\settitle{\thesistitle}{Implementation of algebraic cryptographic primitives in the Plonky2 framework} % Sets English and German version of the title (both can be English or German). If your title contains commas, enclose it with additional curvy brackets (i.e., {{your title}}) or define it as a macro as done with \thesistitle.
+%\setsubtitle{}{} % Sets English and German version of the subtitle (both can be English or German).
+
+% Select the thesis type: bachelor / master / doctor.
+% Bachelor:
+\setthesis{bachelor}
+%
+% Master:
+%\setthesis{master}
+%\setmasterdegree{dipl.} % dipl. / rer.nat. / rer.soc.oec. / master
+%
+% Doctor:
+%\setthesis{doctor}
+%\setdoctordegree{rer.soc.oec.}% rer.nat. / techn. / rer.soc.oec.
+
+% For bachelor and master:
+\setcurriculum{Telecommunications Technologies and Services Engineering}{} % Sets the English and German name of the curriculum.
+
+% Optional reviewer data:
+%\setfirstreviewerdata{Affiliation, Country}
+%\setsecondreviewerdata{Affiliation, Country}
+
+\begin{document}
+
+\frontmatter % Switches to roman numbering.
+% The structure of the thesis has to conform to the guidelines at
+%  https://informatics.tuwien.ac.at/study-services
+
+\addtitlepage{english} % English title page.
+
+\begin{abstract*}
+As cryptographic technologies evolve, the need for specialized hash functions to operate efficiently over different computational environments become necessary. Traditional symmetric alogrithms like AES and SHA-3 have been optimized for hardware and software implementations, which are designed over binary fields. However, protocols like zero-knowledge proofs require hash functions that are optimised over large prime fields.
+
+This thesis addresses the growing demand for Arithmetization-Oriented (AO) cryptographic hash functions for zero-knowledge applications. The performance and efficiency of many zero-knowledge applications often depends on the efficiency of the hash function used.
+
+In response to this need, this work explores a selection of these hash functions and implements them within two zero-knowledge proving systems: Plonk and Plonky2. The research focuses on benchmarking these hash functions to asses their performance within these sytems. The results obtained provide a fundamental base for future research in the field of zero-knowledge proof technologies, recommending potential areas for further development.
+
+\textbf{Keywords}: Hash functions $\cdot$ Arithmetization-oriented $\cdot$ Plonk $\cdot$ Plonky2 $\cdot$ Zero-knowledge $\cdot$ Arithmetic circuits
+\end{abstract*}
+
+\begin{resumen*}
+A medida que las tecnologías criptográficas evolucionan, surge la necesidad de funciones hash especializadas para operar eficientemente en diferentes entornos computacionales. Algoritmos simétricos tradicionales como AES y SHA-3 han sido optimizados para implementaciones en hardware y software, enfocándose principalmente en campos binarios. Sin embargo, protocolos como las pruebas de conocimiento cero requieren funciones hash que estén optimizadas sobre grandes campos primos.
+
+Esta tesis aborda la creciente demanda de funciones hash criptográficas orientadas a la aritmetización adaptadas para aplicaciones de conocimiento cero. El rendimiento y la eficiencia de las aplicaciones de conocimiento cero a menudo dependen de la eficiencia de la función hash utilizada.
+    
+En respuesta a esta necesidad, este trabajo explora una selección de estas funciones hash y las implementa dentro de dos sistemas de prueba de conocimiento cero: Plonk y Plonky2. La investigación se centra en la evaluación comparativa de estas funciones hash para evaluar su rendimiento dentro de estos sistemas. Los resultados obtenidos proporcionan una base fundamental para la investigación futura en el campo de las tecnologías de prueba de conocimiento cero, recomendando áreas potenciales para un desarrollo adicional.
+
+\textbf{Palabras clave}: Funciones hash $\cdot$ Orientado a la aritmetización $\cdot$ Plonk $\cdot$ Plonky2 $\cdot$ Conocimiento cero $\cdot$ Circuitos aritméticos
+\end{resumen*}
+
+\begin{resum*}
+A mesura que les tecnologies criptogràfiques evolucionen, sorgeix la necessitat de funcions hash especialitzades per operar eficaçment en diferents entorns computacionals. Algorismes simètrics tradicionals com AES i SHA-3 han estat optimitzats per a implementacions en maquinari i programari, centrant-se principalment en camps binaris. No obstant això, protocols com les proves de coneixement zero requereixen funcions hash que estiguin optimitzades sobre grans camps prims.
+
+Aquesta tesi aborda la creixent demanda de funcions hash criptogràfiques orientades a l'aritmetització adaptades per a aplicacions de coneixement zero. El rendiment i l'eficiència de les aplicacions de coneixement zero sovint depenen de l'eficiència de la funció hash utilitzada.
+    
+En resposta a aquesta necessitat, aquest treball explora una selecció d'aquestes funcions hash i les implementa dins de dos sistemes de prova de coneixement zero: Plonk i Plonky2. La investigació es centra en l'avaluació comparativa d'aquestes funcions hash per avaluar el seu rendiment dins d'aquests sistemes. Els resultats obtinguts proporcionen una base fonamental per a la recerca futura en el camp de les tecnologies de prova de coneixement zero, recomanant àrees potencials per a un desenvolupament addicional.
+
+\textbf{Paraules clau}: Funcions hash $\cdot$ Orientat a l'aritmetització $\cdot$ Plonk $\cdot$ Plonky2 $\cdot$ Coneixement zero $\cdot$ Circuits aritmètics
+\end{resum*}
+
+\begin{acknowledgements*}
+First of all, I wish to express my appreciation to my advisor, Prof. Elena Andreeva, for providing me with her guidance and the opportunity to conduct my thesis within her research group. I would also like to thank Stefano Trevisani for his advice and for assisting me with technical issues that arose during my thesis.
+
+Finally, I would like to thank my family for their support and belief in me throughout my studies, and for making this incredible experience in Vienna possible.
+\end{acknowledgements*}
+
+% Select the language of the thesis, e.g., english or naustrian.
+\selectlanguage{english}
+
+% Add a table of contents (toc).
+\setcounter{tocdepth}{2}
+\tableofcontents % Starred version, i.e., \tableofcontents*, removes the self-entry.
+
+% Switch to arabic numbering and start the enumeration of chapters in the table of content.
+\mainmatter
+
+\input{chapters/1_introduction}
+
+\input{chapters/2_preliminaries}
+
+\input{chapters/3_zeroKnowledge.tex}
+
+\input{chapters/4_zkHashes.tex}
+
+\input{chapters/5_implementation.tex}
+
+\input{chapters/6_evaluation.tex}
+
+\input{chapters/7_conclusions.tex}
+
+\input{chapters/8_ sustainability.tex}
+
+\backmatter
+
+% Use an optional list of figures.
+\listoffigures % Starred version, i.e., \listoffigures*, removes the toc entry.
+
+% Use an optional list of tables.
+\cleardoublepage % Start list of tables on the next empty right hand page.
+\listoftables % Starred version, i.e., \listoftables*, removes the toc entry.
+
+% Use an optional list of alogrithms.
+%\listofalgorithms
+%\addcontentsline{toc}{chapter}{List of Algorithms}
+
+% Add an index.
+%\printindex
+
+% Add a glossary.
+\printglossaries
+
+% Add a bibliography.
+\bibliographystyle{alpha}
+\bibliography{bibliography/biblio}
+
+\end{document}

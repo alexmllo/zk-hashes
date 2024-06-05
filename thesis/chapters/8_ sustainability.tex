@@ -1,0 +1,108 @@
+\chapter{Sustainability Analysis and Ethical Implications}
+\label{sec:sustainability}
+\section*{Sustainability}
+\subsection*{Environmental impact}
+\subsubsection*{During development}
+The main environmental consideration for this project is the computer, GitLab, emails and a printer.
+
+\textbf{Macbook Pro (2020)}: Operating at 0.0582 kWh\footnote{\url{https://support.apple.com/en-us/111981}} and with an electricity impact of 0.051 kgCO$_2$eq/kWh\footnote{\url{https://app.electricitymaps.com/zone/AT?solar=false&remote=true&wind=false}}, we can get his carbon footprint doing: 
+\[0.0582\text{ kWh}\times0.051\text{ kgCO}_2\text{eq/kWh}= 2.968\text{ gCO}_2\text{eq/hour}.\]
+
+\textbf{Embodied Energy of the Computer}: The MacBook has an embodied energy of 212 kg CO$_2$e\footnote{\url{https://www.apple.com/environment/pdf/products/notebooks/13-inch_MacBookPro_PER_Nov2020.pdf}} distributed over a 5 year lifespan. Thus, the embodied energy per year is:
+\[\frac{212 \text{ kg CO}_2\text{e}}{5\text{ years}}=42.4\text{kg CO}_2\text{e/year}\] 
+and per hour:
+\[\frac{42.4\text{ kg CO}_2\text{e/year}}{87600\text{ hours/year}}=4.84 \text{ gCO}_2\text{e/hour}.\]
+
+\textbf{GitLab usage}: With corporate emissions at 16.654 tCO$_2$e/year\footnote{\url{https://about.gitlab.com/files/esg/GitLab_ESG_FY23_Highlights.pdf}} distributed among 30 millions users. The emissions per user are: 
+\[\frac{16.654 \text{ tCO}_2\text{e}}{30000000\text{ users}}\approx0.5551\text{ kgCO}_2\text{e/year}.\]
+Per hour is 0.00633 gCO$_2$e/hour.
+
+\textbf{Printer}: Assuming an emission of 5 gCO$_2$e per printed page.
+
+\textbf{Emails}: Based on~\cite{berners2020bad}, an email without attachments generates about 0.3 gCO2e, and an email with an attachment generates about 50 gCO2e.
+
+This thesis has got a duration of 21 weeks, and 40 hours per week, so, we have spend 840 hours in total. During the project, 18 email were sent without attachments, 21 with attachments, and 13 papers of aproximately 30 pages each one. With this, we can calculate the total footprint of this thesis:
+\begin{align*}
+    \text{Computer}=2.968\text{ gCO}_2\text{eq/hour}\times840\text{ hours}=2493.12\text{ gCO}_2\text{e} \\
+    \text{Emails}=18\times0.3\text{ gCO}_2\text{e}+21\times50\text{ gCO}_2\text{e}=1055.4\text{ gCO}_2\text{e} \\
+    \text{GitLab}=0.00633\text{ gCO}_2\text{e/hours}\times840\text{ hours}=5.322\text{gCO}_2\text{e} \\
+    \text{Printer}=13\times30\times0.3\text{ gCO}_2\text{e}=117\text{ gCO}_2\text{e}\\
+    \text{Total}=2493.12+1055.4+5.322+117=3670.84\text{gCO}_2\text{e}
+\end{align*}
+
+\subsubsection*{Project execution}
+The primary resources used in this thesis include computational resources (compouters, servers for simulations and software tools), electricity for running the computers and printer.
+
+This thesis focuses on providing metrics of existing cryptographic primitives (hash functions) eficient in zero-knowledge frameworks. Thus, providing help for which one of these efficient primitives works better for the frameworks it is intended to use. And if these results are used in cryptographic processes, it could lead to lower energy consumption.
+
+We could mitigate the environmental impact, we could use cloud computing, in this way we won't have for an individual computer to run all the software.
+
+\subsubsection*{Risks and Limitations}
+There are some escenarios that could arise the the project's footprint. For example, if the project needs more extensive test it could increase the electricity consumption. Furthermore, if the duration is extended regarding the initial planned, the associated emissions would increase.
+
+This project could have been conducted in a more efficient way by using cloud resources and not rely entirely on a physical computer.
+
+\subsection*{Economic impact}
+\subsubsection*{During development}
+Now, we are going to analize and quantify the human cost and material costs during the development of this thesis (21 weeks).
+
+We used a MacBook Pro (2020), regarding the development of the project, we used Rust and Python, both of them are a free open-source programming language, Criterion, also a free open-source benchmarking library in Rust, SageMath, a free open-source mathematics software system, and LaTeX, for writting the thesis, also a free software. The printer is owned by the research group, so it is also free.
+
+For the student, we will assume the salary of an internship, 10\euro/hour, and 20\euro/hour salary for each supervisors.
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{lllll}
+    \hline
+                & Amount & Salary                      & Dedication    & Total                    \\ \hline
+    Student     & 1      & 10\euro/hour & 40 hours/week & 8400\euro \\
+    Supervisors & 2      & 20\euro/hour & 1 hour/week   & 420\euro  \\
+                &        &                             &               &                          \\
+    Computer    & 1      &                             &               & 1000\euro \\ \hline
+                &        &                             & Total:        & 8820\euro \\ \hline
+    \end{tabular}
+    \caption{Economic impact}
+    \label{tab:economic-impact}
+    \end{table}
+
+\subsubsection*{Project execution}
+This project could benefit other projects by providing knowledge gained from optimizing cryptographic primitives within zero-knowledge frameworks, these results could be applied to other areas of cryptography. Furthermore, the developed software could be reused or adapted for other projects. Thus, reducing their initial development costs and speeding up the development.
+
+\subsubsection*{Risks and Limitations}
+Several escenarios could put at risk the viability of the project:
+
+For example, if the developed cryptographic algorithms are compromised or found to have vulnerabilities, the viavility of the project could be reduced. Furthermore, fast advances in cryptography could make them not usefull compared to these new ones.
+
+\subsection*{Social impact}
+\subsubsection*{During development}
+This project provides metrics of the behavior of some cryptographic primitive within two zero-knowledge frameworks. Besides it also provides theoretical knowledge to fully understant all the concepts required for using these metrics. Thus, it presents advances in the field of applied cryptography.
+
+\subsubsection*{Project execution}
+The primary beneficiaries of this project are researchers and developers in the field of cryptography, they can use these metrics to develop new cryptographic tools or improve the ones implemented in this thesis.
+
+The field of zero-knowledge is very new, and this project helps to solve the lack of information in this section by providing metrics of cryptographic primitives within zero-knowledge and help researchers with these results.
+
+\subsubsection*{Risks and Limitations}
+We could not find a risk that could negatively effect the population.
+
+\section*{Ethical implications}
+This thesis addresses the need for more information regarding these new cryptographic primitives efficient within zero-knowledge frameworks. We provide metrics that can be used for organitzations when deciding which primitive is more efficient in their project or for researchers to continue to develop and improve in this area.
+
+These needs are defined by the advances in this field, it is a very promising field that has been started to develop recently, the implemented primitives are 4 years old maximum, so advances in this area are required.
+
+This project complies with the General Data Protection Regulation (GDPR) to ensure that any data used or generated respects privacy and data protection laws.
+
+\section*{Relationship with the Sustainable Development Goals}
+From the 17 SDGs, we can say that our thesis contributes to three of them.
+
+\textbf{SDG 9: Industry, Innovation, and Infrastructure}\\
+We contribute to this goal, which focus on building resilient infrastructure, promoting sustainable industrialization, and promoting innovation.
+
+By providing metrics of efficient cryptographic primitives in zero-knowledge frameworks, we enchange the security of industries that use this technology, including finance, healtcare, etc.
+These cryptographic primitives are fundamental to protect data and ensuring integrity of them.
+
+\textbf{SDG 11: Sustainable Cities and Communities}\\
+We don't contribute directly to this goal but, smart cities contribute to the sustainability of the cities, so IoT devices are used for this goal. Cryptographic primitives are esencial to protect exchanged data between devices, and mantain privacy.
+
+\textbf{SDG 13: Climate Action}\\
+We are presenting metrics that could be used for companies to decide which cryptographic primitive is the more efficient for their needs. Besides, the use of this optimizated cryptographic primitives reduce the computational costs, thus, reducing the carbon footprint associated to it.

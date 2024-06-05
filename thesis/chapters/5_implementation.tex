@@ -1,0 +1,232 @@
+\chapter{Implementation}
+\label{sec:impl}
+We have developed two libraries to evaluate the performance of the hash functions discussed in Section~\ref{sec:zk-hashes}. The first library uses the Plonky2\footnote{\url{https://github.com/0xPolygonZero/plonky2}} proving system from Polygon Labs, a SNARK proving system based on PLONK and FRI, allowing us to write these functions as arithmetic circuits and generate proofs of knowledge.\\
+The second library implements these functions using Dusk Plonk\footnote{\url{https://github.com/dusk-network/plonk}} from Dusk Network, a Plonk proving system as descrived in section~\ref{sec:plonk}.
+
+In addition to zero-knowledge implementations, we also incorporated the plain implementation of such hash functions.
+
+Both libraries are written in the Rust programming language and designed to allow future inclusions of additional hash functions.
+
+Rust was chosen as the programming language due to its compatibility with both Plonky2 and PLONK, given that these frameworks are implemented in Rust.
+
+Both libraries are not stable, meaning that they are under active development, so for using them we can't use the Stable Rust version, we worked on the Nightly version.
+
+These hash functions are constructed based on the concepts provided in section~\ref{sec:zk-hashes}. Note that, we used SageMath to compute the constants of the hashes and create binary files to store them. SageMath was selected for his ability in algebra over finit fields and the broader range of mathematical functionalities it provides.
+
+Additionally, we used Criterion, a benchmarking library in Rust, to check the performance of the hashes in both libraries, in the standard and zero-knowledge.
+
+\section{Implementation using Plonky2}
+\label{sec:plonky-implementation}
+Plonky2 operates on the Goldilocks field (section~\ref{sec:goldilocks}), $p=2^{64} - 2^{32} + 1$. We used SageMath for the generation of round constants, MDS matrices, and number of rounds for each hash function.
+
+The implementation is divided into four parts:
+\begin{enumerate}
+  \item \textbf{Circuit setup}. Firts, we generate the virtual targets\footnote{The term virtual target refers to an intermediate value used during the setup of the circuit but not used in the computation during proof generation.}, such as the private input and the state of the sponge. Subsequently, we check that the input $\geq0$ and is multiple of the rate $r$. Next, we develop the arithmetic circuit, in our case, it corresponds to the algorithm of each hash function, including the absorbing and the digest part, to generate the output based on the chosen length, and finally assing it as the public input.
+  \item \textbf{Witness generation}. Here, we assing the values of the private inputs (witnesses), such as the inputs and the constants of the hash function.
+  \item \textbf{Proof generation}. Internally, in the Plonky2 framework, the circuit is constructed, all the constraints of the circuit are generated, including copy constraints, forming the constraint system. Afterwards, the witnesses are used to evaluate the constraint system, generating the proof following the procedure explained in section~\ref{sec:plonk}.
+  \item \textbf{Proof verification}. Finally, the circuit is verified, the verifier using the proof alognside the public inputs decides if he accepts the proof or not.
+\end{enumerate}
+
+We only conducted tests for a state length $t=12$, contrary to the Plonk implementation. Plonky2 is an upgraded version of Plonk, and there are some automatic optimizations to reduce the number of constraints, thus, improving efficiency. Table~\ref{tab:goldi-rounds} shows the round numbers for the hashes that we implement in the Goldilocks field, where $\alpha$ is the smallest integer value for wich $x^\alpha$ is a permutation, in other words, $gcd(p-1,\alpha)=1$.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}cccccc@{}}
+  \toprule
+  \multicolumn{6}{c}{Rounds}                                           \\ \midrule
+  \multicolumn{1}{c|}{Hash} &
+    \multicolumn{1}{c|}{Poseidon} &
+    \multicolumn{1}{c|}{Rescue-prime} &
+    \multicolumn{1}{c|}{Griffin} &
+    \multicolumn{1}{c|}{Anemoi} &
+    \multicolumn{1}{c|}{Arion} \\ \midrule
+  \multicolumn{1}{l|}{State size $t$} & \multicolumn{5}{c}{$\alpha=7$} \\ \midrule
+  \multicolumn{1}{c|}{12} &
+    \multicolumn{1}{c|}{$r_f=8,$ $r_p=22$} &
+    \multicolumn{1}{c|}{7} &
+    \multicolumn{1}{c|}{8} &
+    \multicolumn{1}{c|}{10} &
+    \multicolumn{1}{c|}{4} \\ \bottomrule
+  \end{tabular}
+  \caption{Round numbers for Poseidon [Section~\ref{sec:poseidon}], Rescue-prime [Section~\ref{sec:Rescue-prime}], Griffin [Section~\ref{sec:griffin}], Anemoi [Section~\ref{sec:anemoi}], Arion [Section~\ref{sec:Arion}]}
+  \label{tab:goldi-rounds}
+  \end{table}
+
+\textbf{Optimizations}\\
+The main goal of this optimization is to improve the efficiency of the circuit by reducing the computational complexity and the number of constraints.\\
+We optimized certain computations of the code to minimize the number of constraints. The inverse S-box involves the calculation of $x^{1/d}$. Instead of computing $x^{1/d}$ directly, we first compute $y^d$ within the circuit, where $y$ is a new virtual target representing the inverse operation. This allows us to simplify the exponentiation to a series of multiplications, which are computationally cheaper.\\
+Subsequently, we compute $x$ from $y^d$ during circuit design rather than during proof generation phase. Finally, we connect $x$ and $y^d$. This is done by establishing a constraint within the circuit that binds the outcome of $y^d$ to the original value $x$.
+
+In the following code, we implement this optimization.
+
+First of all, we define a trait that implements CircuitBuilder, used to build constraints, add witnesses, generally, to setup the circuit, and we define a function used to compute $x^{1/d}$. Next, we create a virtual target $y$ and with it we compute $y^d$. Subsequently, we add a generator, it assigns a value to a virtual target during proof generation. In this generator we compute the expensive operation $x^{1/d}$, this operation is computed once during circuit setup and not during proof generation.
+
+Finally we ensure that the result from the operation $x^{1/d}$ is correctly linked to the previously established virtual target $y$, so $y=x^{1/d}$.
+\vspace{1em}
+
+\begin{lstlisting}
+trait CircuitBuilderExtensions<F: RichField + Extendable<D>, const D: usize> {
+    fn exp_inv(&mut self, x: Target) -> Target;
+    fn exp_inv_extension(&mut self, x: ExtensionTarget<D>) -> ExtensionTarget<D>;
+}
+
+impl<F: RichField + Extendable<D>, const D: usize> CircuitBuilderExtensions<F, D> 
+  for CircuitBuilder<F, D>
+{
+  fn exp_inv(&mut self, x: Target) -> Target {
+      let x_ext = self.convert_to_ext(x);
+      Self::exp_inv_extension(self, x_ext).0[0]
+  }
+
+  fn exp_inv_extension(&mut self, x: ExtensionTarget<D>) -> ExtensionTarget<D> {
+      let exp_inv = self.add_virtual_extension_target();
+      self.add_simple_generator(ExpGeneratorExtension {
+          base: x,
+          exp_result: exp_inv,
+      });
+
+      // Enforce that y^d = x
+      // d = 7 (ALPHA)
+      let x2 = self.mul_extension(exp_inv, exp_inv);
+      let x4 = self.mul_extension(x2, x2);
+      let x6 = self.mul_extension(x4, x2);
+      let y_inv = self.mul_extension(x6, exp_inv);
+      self.connect_extension(y_inv, x);
+
+      exp_inv
+  }
+}
+
+#[derive(Debug, Default)]
+pub struct ExpGeneratorExtension<const D: usize> {
+    base: ExtensionTarget<D>,
+    exp_result: ExtensionTarget<D>,
+}
+
+impl<F: RichField + Extendable<D>, const D: usize> SimpleGenerator<F, D>
+    for ExpGeneratorExtension<D>
+{
+    fn id(&self) -> String {
+        "ExpGeneratorExtension".to_string()
+    }
+
+    fn dependencies(&self) -> Vec<Target> {
+        let deps = self.base.to_target_array().to_vec();
+        deps
+    }
+
+    fn run_once(
+        &self,
+        witness: &plonky2::iop::witness::PartitionWitness<F>,
+        out_buffer: &mut plonky2::iop::generator::GeneratedValues<F>,
+    ) {
+        let base = witness.get_extension_target(self.base);
+        let mut current_base = base.clone();
+        let mut exp = <F as Extendable<D>>::Extension::from(F::ONE);
+        let mut power = ALPHA_INV;
+        while power > 0 {
+            if power % 2 == 1 {
+                exp = exp * current_base;
+            }
+            current_base = current_base * current_base;
+            power /= 2;
+        }
+        out_buffer.set_extension_target(self.exp_result, exp)
+    }
+
+    fn serialize(
+        &self,
+        dst: &mut Vec<u8>,
+        _common_data: &plonky2::plonk::circuit_data::CommonCircuitData<F, D>,
+    ) -> plonky2::util::serialization::IoResult<()> {
+        dst.write_target_ext(self.base)?;
+        dst.write_target_ext(self.exp_result)
+    }
+
+    fn deserialize(
+        src: &mut plonky2::util::serialization::Buffer,
+        _common_data: &plonky2::plonk::circuit_data::CommonCircuitData<F, D>,
+    ) -> plonky2::util::serialization::IoResult<Self> {
+        let base = src.read_target_ext()?;
+        let exp = src.read_target_ext()?;
+        core::result::Result::Ok(Self {
+            base,
+            exp_result: exp,
+        })
+    }
+}
+\end{lstlisting}
+
+
+\section{Implementation using Dusk Plonk}
+In the Plonk implementation of the Dusk Network, we operate on the BLS12-381 curve, detailed in section~\ref{sec:bls12}, using $r$ as the modulus of the field.
+
+\textbf{Plonk modifications.} In this Plonk framework, there is a modification in the two input Plonk constraint detailed in Equation~\ref{eq:plonk-constraint}. However, in this framework, the Plonk equation has 3 inputs (3 addition gates)
+\begin{equation}
+  \left(\textbf{q}_\textbf{L}\right)_i\cdot\textbf{x}_{\textbf{a}_i}+ \left(\textbf{q}_\textbf{R}\right)_i\cdot\textbf{x}_{\textbf{b}_i} + \left(\textbf{q}_\textbf{O}\right)_i\cdot\textbf{x}_{\textbf{ac}_i} + \left(\textbf{q}_\textbf{M}\right)_i\cdot\left(\textbf{x}_{\textbf{a}_i}\textbf{x}_{\textbf{b}_i}\right) + \left(\textbf{q}_\textbf{C}\right)_i + \left(\textbf{q}_\textbf{F}\right)_i\cdot\textbf{x}_{\textbf{d}_i}=0
+\end{equation}
+
+where $d$ is the "fourth" variable and $\textbf{q}_\textbf{F}$ the selector coefficient.
+
+We integrated the hash functions directly to the Dusk Network repository\footnote{\url{https://github.com/dusk-network/Poseidon252}}, with the exception of the Poseidon hash function, which was already available. To acommodate the hash functions from Section~\ref{sec:zk-hashes}, we generalized the code.
+
+The implementation is the same as in the Plonky2, due to Plonky2 being based on the PLONK proving system.
+
+For the generation of round constants and MDS matrices, we again used SageMath. However, due to the significant size of the field, reaching up to 256 bits, we can't store the values directly. Therefore, after obtaining the values using SageMath, we converted them into an array of 32 bytes, configuring the byte order to be "little-endian" to ensure the most significant byte is at the end of the byte array. After that, we create a binary file to store the these computed constants. For using them on the code, they were then mapped onto "BlsScalar" in the BLS12-381 scalar field.
+
+In the Plonk implementation we conducted tests for $t\in{4,5,6,8}$. Table~\ref{tab:plonk-rounds} shows the round numbers for each hash function and their state length $t$.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}cccccclll@{}}
+  \toprule
+  \multicolumn{9}{c}{Rounds}                                                                                                                                              \\ \midrule
+  \multicolumn{1}{l|}{} &
+    \multicolumn{1}{c|}{Poseidon} &
+    \multicolumn{1}{c|}{Rescue-prime} &
+    \multicolumn{1}{c|}{Griffin} &
+    \multicolumn{1}{c|}{Anemoi} &
+    \multicolumn{4}{c}{Arion} \\ \midrule
+  \multicolumn{1}{l|}{$t$} & \multicolumn{8}{c}{$\alpha=5$}                                                                                                               \\ \midrule
+  \multicolumn{1}{c|}{4}   & \multicolumn{1}{c|}{$r_f=8,$ $r_p=56$} & \multicolumn{1}{c|}{11} & \multicolumn{1}{c|}{11} & \multicolumn{1}{c|}{12} & \multicolumn{4}{c}{5} \\
+  \multicolumn{1}{c|}{5}   & \multicolumn{1}{c|}{$r_f=8,$ $r_p=60$} & \multicolumn{1}{c|}{9}  & \multicolumn{1}{c|}{-}  & \multicolumn{1}{c|}{-}  & \multicolumn{4}{c}{5} \\
+  \multicolumn{1}{c|}{6}   & \multicolumn{1}{c|}{$r_f=8,$ $r_p=57$} & \multicolumn{1}{c|}{8}  & \multicolumn{1}{c|}{-}  & \multicolumn{1}{c|}{10} & \multicolumn{4}{c}{5} \\
+  \multicolumn{1}{c|}{8}   & \multicolumn{1}{c|}{$r_f=8,$ $r_p=57$} & \multicolumn{1}{c|}{8}  & \multicolumn{1}{c|}{9}  & \multicolumn{1}{c|}{10} & \multicolumn{4}{c}{4} \\ \bottomrule
+  \end{tabular}
+  \caption{Round numbers for Poseidon [Section~\ref{sec:poseidon}], Rescue-prime [Section~\ref{sec:Rescue-prime}], Griffin [Section~\ref{sec:griffin}], Anemoi [Section~\ref{sec:anemoi}], Arion [Section~\ref{sec:Arion}]}
+  \label{tab:plonk-rounds}
+  \end{table}
+
+Note that, the length of the state in Griffin must be 3 or a multiple of 4 as explained in section~\ref{sec:griffin} and in Anemoi it must be even, outlined in section~\ref{sec:anemoi}.
+
+To improve efficiency, we perform the same optimization used in Plonky2 to reduce number of constraints in the Plonk framework.
+
+In the following code, the optimization over the Plonk framework is conducted.\\
+We can see that the approach to compute $x^{1/d}$ is more simplier than in the Plonky2 framework. However, both of these implementation follow the same idea to optimize this operation.
+
+In Plonk, the Composer is the same as the CircuiBuilder in Plonky2, it handles the arrangement and management of computations and constraints within the circuit.
+
+We start by retrieving the value assigned to a witness variable $x$ which is used to compute $x^{1/d}$. Once the operation on $x$ is computed, this value is allocated within the composer, and its index is stored. This index represents $y$, and is used to compute $y^{1/d}$. The final step involves ensuring that the original witness $x$ is consistent with the computed index from $y^{1/d}$. This is necesary for ensuring that they conform to the circuit constraints.
+\vspace{1em}
+
+\begin{lstlisting}
+  fn inverse_sbox(&mut self, value: &mut Witness) {
+      // Retrieve the value from the composer and compute a power operation
+      let tmp = self.composer[*value];
+      let tmp = tmp.pow_vartime(&E_2);
+
+      // Allocate the computed value as a new witness in the composer
+      let wit = self.composer.append_witness(tmp);
+
+      // y^2
+      let constraint = Constraint::new().mult(1).a(wit).b(wit);
+      let tmp_wit = self.composer.gate_mul(constraint);
+      // y^4
+      let constraint = Constraint::new().mult(1).a(tmp_wit).b(tmp_wit);
+      let tmp_wit = self.composer.gate_mul(constraint);
+      // Compute y^5 by multiplying y^4 with y, and update the original witness value
+      let constraint = Constraint::new().mult(1).a(tmp_wit).b(wit);
+      *value = self.composer.gate_mul(constraint);
+      *value = wit;
+    }
+\end{lstlisting}

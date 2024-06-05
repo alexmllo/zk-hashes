@@ -1,0 +1,25 @@
+\chapter{Conclusions}
+\label{sec:conclusions}
+\section{Discussion}
+This thesis succesfully developed and evaluated a series of hash functions within two zero-knowledge frameworks, namely Plonky2 and Plonk, focusing on the generation of proofs of knowledge for these computed hashes.
+
+In chapter~\ref{sec:theory}, we provide the theoretical knowledge needed to understand the development of the project. This include some background knowledge on hash functions, sponge structure and finit fields, forming a solid foundation for understanding zero-knowledge proofs and the specific proving system we are using in this thesis, Plonk.
+
+Chapter~\ref{sec:impl} discusses the implementation of these hash functions, highlighting significant optimizations that improve performance, particulary within the zero-knowledge framework. Benchmarking results indicate that the implemented hash functions meet the expected performance regarding their characteristics, as explained in section~\ref{sec:zk-hashes}.
+
+So, which is the best hash function? As is often the case, the answer is not that simple and depends of various factors, such as the chosen zero-knowledge proof system and the primary cost metric for the use case. Let's first investigate the best hash function considering prover performance, in other words, minimizing the number of constraints inside the cicuit. Since Poseidon, the objective has been to minimize the number of multiplications within the circuit. This led to using both $y=x^d$ and $y=x^{1/d}$, which results in a secure hash function with a small number of rounds (and thus also a small number of constraints). The first hash functions to implement this is Rescue, followed by new optimizations that let to the development of Griffin, Anemoi and Arion. We compared these hash functions for performance when used in various configurarions and proof systems. From the results obtained in Chapter~\ref{sec:evaluation}, Arion shows better performance when used in Plonk proof system compared to all other hash functions. In contrast, in the Plonky2 proving system, Rescue, Griffin and Anemoi, each with similar performance, perform better than Arion.
+
+What makes these hash functions, Griffin, Rescue, Anemoi and Arion so fast inside the zero-knowledge circuit makes them slow for plain hashing. Consequently, for cases where plain performance is equally important as the prover performance, the hash function with best performance differs from the previous results. Here, we need to consider the prime field we are working on. In this thesis, we implemented them in two field, the Goldilocks and the BLS12-381 scalar field. In the case of the BLS12-381, a large field, Poseidon results in the best performance for small state sizes, and Arion for large state sizes. If using the Goldilocks small field, Arion, Griffin and Poseidon perform similary when the state size is large. However, although is has not been explained in this thesis, if our proving system support lookup arguments~\cite{10.1007/978-3-030-03326-2_20, cryptoeprint:2022/1763, cryptoeprint:2022/957, 10.1145/3548606.3560646, cryptoeprint:2022/1565}, we can use hash functions designed for native performance using lookups, such as Reinforced Concrete~\cite{cryptoeprint:2021/1038} or Monolith~\cite{cryptoeprint:2023/1025}.
+
+In conclusion, choosing the best hash function depends on various factors, which we explored for various needs. If prover performance is needed, use Arion. If plain performance is important, Poseidon is the best option for large fields, while small fields, Arion, Griffin and Poseidon present similar performance.
+
+\section{Future work}
+The work completed in this thesis set a baseline for further research and development.
+
+It would be interesting to explore the development of recursive proofs, which is a property of SNARKs allowing a SNARK to verify other SNARKs, this could simplify processes where multiple computations need verification.
+
+Future research could include the addition of new hash functions to our library, expanding the scope for benchmark comparasions.
+
+Another direction could involve testing the implemented hash functions within another zero-knowledge framework. This metrics would allow us to evaluate how the performance of the hash functions varies with different frameworks.
+
+We can remark that the objectives of this thesis have been succesfully archieved, preparing the stage for further work and innovations.
