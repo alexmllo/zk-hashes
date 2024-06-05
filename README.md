@@ -1,4 +1,4 @@
-# zk-lib: Zero-knowledge Library for hash functions
+# Zero-knowledge Library for hash functions
 
 This repository constains the implementation of two Zero-Knowledge Proof (ZK) libraries for ZK-Friendly Hash Functions named zk-lib and zk-dusk, developed as part of the bachelor thesis. The libraries provides plain and zero-knowledge circuit implementation for various hash functions in the Polygon's Plonky2 and Dusk Plonk's Plonk proof systems for generating zero-knowledge proofs, in the Rust programming language.
 
